@@ -1,7 +1,3 @@
-<p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
-</p>
-
 # Create a JavaScript Action using TypeScript
 
 Use this template to bootstrap the creation of a TypeScript action.:rocket:
@@ -103,3 +99,7 @@ See the [actions tab](https://github.com/actions/typescript-action/actions) for 
 ## Usage:
 
 After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and latest V1 action
+
+## Helpers
+
+If you created helpers that you consider could benefit to other actions, please consider contributing by adding them to the `helpers` folder.
