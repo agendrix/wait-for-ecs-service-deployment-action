@@ -20,7 +20,7 @@ outputs:
     description: |
       The outcome of the service deployment. Possible values are:
       'success' if the deployment completed successfully and that the service is table
-      'skipped' if a more recent deployment was enqueue while the deployment was ongoing
+      'skipped' if a new primary deployment was enqueue while the deployment was ongoing
 runs:
   using: node12
   main: dist/index.js
