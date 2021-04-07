@@ -27,7 +27,7 @@ async function run(): Promise<void> {
 
     const deploymentOutcome = waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, timeout);
     core.info(`Deployment outcome: ${deploymentOutcome}`);
-    core.setOutput("deploymentOutcome", deploymentOutcome);
+    core.setOutput("deployment-outcome", deploymentOutcome);
     clearTimeout(timeout);
   } catch (error) {
     core.setFailed(error.message);
