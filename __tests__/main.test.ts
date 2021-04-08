@@ -1,7 +1,7 @@
 import { DeploymentOutcome, DeploymentStatus, RolloutState } from "../src/types";
-import { fetchDeployments } from "../src/ecs/fetchDeployments";
-import { waitForDeploymentOutcome } from "../src/ecs/waitForDeploymentOutcome";
-import { isServiceStable } from "../src/ecs/isServiceStable";
+import fetchDeployments from "../src/ecs/fetchDeployments";
+import waitForDeploymentOutcome from "../src/ecs/waitForDeploymentOutcome";
+import isServiceStable from "../src/ecs/isServiceStable";
 
 jest.mock("../src/ecs/fetchDeployments");
 let mockedFetchDeployments = fetchDeployments as jest.Mock;
@@ -10,7 +10,7 @@ jest.mock("../src/ecs/isServiceStable");
 const mockedIsServiceStable = isServiceStable as jest.Mock;
 mockedIsServiceStable.mockReturnValue(true);
 
-const TASK_DEFINITION_ARN = "task-definition-arn";
+const TASK_DEFINITION_ARN = "arn:aws:ecs:ca-central-1:<account-number>:task-definition/web_app:1500";
 const CLUSTER = "cluster";
 const SERVICE = "service";
 
@@ -88,7 +88,7 @@ describe("waitForDeploymentOutcome", () => {
     const deploymentB = {
       id: "2",
       status: DeploymentStatus.PRIMARY,
-      taskDefinitionArn: "another-task-definition-arn",
+      taskDefinitionArn: TASK_DEFINITION_ARN.slice(0, -1),
       rolloutState: RolloutState.IN_PROGRESS
     };
     const finalDeploymentsState = [{ ...deploymentA }, { ...deploymentB }];

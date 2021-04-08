@@ -1,9 +1,9 @@
 import * as core from "@actions/core";
 import { validateRequiredInputs } from "../helpers/action/validateRequiredInputs";
-import { validateClusterExists } from "./ecs/validateClusterExists";
-import { validateDeploymentForTaskDefinitionExists } from "./ecs/validateDeploymentForTaskDefinitionExists";
-import { validateServiceExists } from "./ecs/validateServiceExists";
-import { waitForDeploymentOutcome } from "./ecs/waitForDeploymentOutcome";
+import validateClusterExists from "./ecs/validateClusterExists";
+import validateDeploymentForTaskDefinitionExists from "./ecs/validateDeploymentForTaskDefinitionExists";
+import validateServiceExists from "./ecs/validateServiceExists";
+import waitForDeploymentOutcome from "./ecs/waitForDeploymentOutcome";
 
 function setDeploymentTimeout(deploymentTimeoutInMinutes: number) {
   return setTimeout(() => {
@@ -20,6 +20,7 @@ async function run(): Promise<void> {
     const taskDefinitionArn: string = core.getInput("task-definition-arn");
     const deploymentTimeoutInMinutes: number = Number(core.getInput("deployment-timeout-minutes"));
     const timeout = setDeploymentTimeout(deploymentTimeoutInMinutes);
+    timeout.unref(); // unref() ensures that the process will exit even if the timeout is left behind
 
     await validateClusterExists(clusterName);
     await validateServiceExists(clusterName, serviceName);

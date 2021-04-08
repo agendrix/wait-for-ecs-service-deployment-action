@@ -96,11 +96,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.fetchDeployments = void 0;
 const exec_1 = __nccwpck_require__(671);
 function fetchDeployments(clusterName, serviceName) {
     return __awaiter(this, void 0, void 0, function* () {
-        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-services --cluster ${clusterName} --service ${serviceName}`));
+        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-services --cluster ${clusterName} --service ${serviceName} --query 'services[*].deployments[*].{ id: id, status: status, taskDefinitionArn: taskDefinitionArn, rolloutState: rolloutState }'`));
         const services = result.services;
         const service = services.find(s => s.serviceName === serviceName);
         const deployments = service === null || service === void 0 ? void 0 : service.deployments;
@@ -109,7 +108,7 @@ function fetchDeployments(clusterName, serviceName) {
         return deployments;
     });
 }
-exports.fetchDeployments = fetchDeployments;
+exports.default = fetchDeployments;
 
 
 /***/ }),
@@ -127,13 +126,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.fetchPrimaryDeployment = void 0;
-const fetchDeployments_1 = __nccwpck_require__(424);
+const fetchDeployments_1 = __importDefault(__nccwpck_require__(424));
 const types_1 = __nccwpck_require__(945);
 function fetchPrimaryDeployment(clusterName, serviceName) {
     return __awaiter(this, void 0, void 0, function* () {
-        const deployments = yield fetchDeployments_1.fetchDeployments(clusterName, serviceName);
+        const deployments = yield fetchDeployments_1.default(clusterName, serviceName);
         const primaryDeployment = deployments.find(d => d.status === types_1.DeploymentStatus.PRIMARY);
         if (!primaryDeployment) {
             throw new Error(`No PRIMARY deployment was found. Please make sure that the aws-cli api has not changed.`);
@@ -141,7 +142,7 @@ function fetchPrimaryDeployment(clusterName, serviceName) {
         return primaryDeployment;
     });
 }
-exports.fetchPrimaryDeployment = fetchPrimaryDeployment;
+exports.default = fetchPrimaryDeployment;
 
 
 /***/ }),
@@ -179,13 +180,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isServiceStable = void 0;
 const core = __importStar(__nccwpck_require__(186));
 const exec_1 = __nccwpck_require__(671);
 function isServiceStable(clusterName, serviceName) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Validating that an ECS cluster with name ${clusterName} exists...`);
-        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-services --cluster ${clusterName} --service ${serviceName}`));
+        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-services --cluster ${clusterName} --service ${serviceName} --query 'services[*].[{ desiredCount: desiredCount, runningCount: runningCount, deployments: deployments[*].id }]'`));
         const service = result.services.shift();
         core.info(`
     Service desired count: ${service.desiredCount} 
@@ -196,7 +196,26 @@ function isServiceStable(clusterName, serviceName) {
             service.deployments.length === 1);
     });
 }
-exports.isServiceStable = isServiceStable;
+exports.default = isServiceStable;
+
+
+/***/ }),
+
+/***/ 795:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+function parseTaskDefinitionArn(taskDefinitionArn) {
+    const familyAndRevision = taskDefinitionArn.split("/").pop();
+    if (familyAndRevision) {
+        let [_family, _revision, rest] = familyAndRevision.split(":");
+        if (!rest)
+            return familyAndRevision;
+    }
+    throw new Error(`Task definition arn ${taskDefinitionArn} format was not recognized.`);
+}
+exports.default = parseTaskDefinitionArn;
 
 
 /***/ }),
@@ -234,19 +253,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validateClusterExists = void 0;
 const core = __importStar(__nccwpck_require__(186));
 const exec_1 = __nccwpck_require__(671);
 function validateClusterExists(clusterName) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Validating that an ECS cluster with name ${clusterName} exists...`);
-        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-clusters --clusters ${clusterName}`));
+        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-clusters --clusters ${clusterName} --query 'clusters[*].clusterName'`));
         if (result.clusters.length === 0) {
             throw new Error(`No ECS clusters with name ${clusterName} was found.`);
         }
     });
 }
-exports.validateClusterExists = validateClusterExists;
+exports.default = validateClusterExists;
 
 
 /***/ }),
@@ -283,20 +301,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validateDeploymentForTaskDefinitionExists = void 0;
 const core = __importStar(__nccwpck_require__(186));
-const fetchDeployments_1 = __nccwpck_require__(424);
+const fetchDeployments_1 = __importDefault(__nccwpck_require__(424));
+const parseTaskDefinition_1 = __importDefault(__nccwpck_require__(795));
 function validateDeploymentForTaskDefinitionExists(clusterName, serviceName, taskDefinitionArn) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Validating that a deployment exists for task definition ${taskDefinitionArn}...`);
-        const deployments = yield fetchDeployments_1.fetchDeployments(clusterName, serviceName);
-        if (!deployments.find(d => d.taskDefinitionArn === taskDefinitionArn)) {
+        const deployments = yield fetchDeployments_1.default(clusterName, serviceName);
+        if (!deployments.find(d => parseTaskDefinition_1.default(d.taskDefinitionArn) === parseTaskDefinition_1.default(taskDefinitionArn))) {
             throw new Error(`No deployment associated to task definition arn ${taskDefinitionArn} was found.`);
         }
     });
 }
-exports.validateDeploymentForTaskDefinitionExists = validateDeploymentForTaskDefinitionExists;
+exports.default = validateDeploymentForTaskDefinitionExists;
 
 
 /***/ }),
@@ -334,19 +355,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validateServiceExists = void 0;
 const core = __importStar(__nccwpck_require__(186));
 const exec_1 = __nccwpck_require__(671);
 function validateServiceExists(clusterName, serviceName) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Validating that an ECS service with name ${serviceName} exists in ${clusterName} cluster...`);
-        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-services --cluster ${clusterName} --service ${serviceName}`));
+        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-services --cluster ${clusterName} --service ${serviceName} --query 'services[*].serviceName'`));
         if (result.services.length === 0) {
             throw new Error(`No ECS service with name ${serviceName} was found in ${clusterName} cluster.`);
         }
     });
 }
-exports.validateServiceExists = validateServiceExists;
+exports.default = validateServiceExists;
 
 
 /***/ }),
@@ -383,40 +403,42 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.waitForDeploymentOutcome = void 0;
 const core = __importStar(__nccwpck_require__(186));
 const util_1 = __nccwpck_require__(669);
 const types_1 = __nccwpck_require__(945);
-const isServiceStable_1 = __nccwpck_require__(211);
-const fetchPrimaryDeployment_1 = __nccwpck_require__(490);
+const isServiceStable_1 = __importDefault(__nccwpck_require__(211));
+const fetchPrimaryDeployment_1 = __importDefault(__nccwpck_require__(490));
 const sleep = util_1.promisify(setTimeout);
 const STATUS_CHECK_FREQUENCY_MS = 5000;
 function waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, deploymentTimeout, statusCheckFrequencyInMs = STATUS_CHECK_FREQUENCY_MS) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info("Waiting for deployment outcome...");
-        let primaryDeployment = yield fetchPrimaryDeployment_1.fetchPrimaryDeployment(clusterName, serviceName);
+        let primaryDeployment = yield fetchPrimaryDeployment_1.default(clusterName, serviceName);
         while (primaryDeployment.taskDefinitionArn === taskDefinitionArn && primaryDeployment.rolloutState !== types_1.RolloutState.COMPLETED) {
-            primaryDeployment = yield fetchPrimaryDeployment_1.fetchPrimaryDeployment(clusterName, serviceName);
+            primaryDeployment = yield fetchPrimaryDeployment_1.default(clusterName, serviceName);
             yield sleep(statusCheckFrequencyInMs);
         }
         if (primaryDeployment.taskDefinitionArn !== taskDefinitionArn) {
             core.info(`A new PRIMARY deployment is registered with task definition ${primaryDeployment.taskDefinitionArn}.`);
             return types_1.DeploymentOutcome.SKIPPED;
         }
-        else if (isServiceStable_1.isServiceStable(clusterName, serviceName)) {
+        else if (isServiceStable_1.default(clusterName, serviceName)) {
             core.info(`The deployment associated with ${taskDefinitionArn} has completed successfully and the service ${serviceName} is stable`);
             return types_1.DeploymentOutcome.SUCCESS;
         }
         else {
             core.error(`The primary deployment has a rollout status of ${primaryDeployment.rolloutState} but the the service does not seem stable. The action will therefore continue waiting until the service becomes stable.`);
             // Validate deployment timeout existence to prevent infinite loop
-            if (deploymentTimeout.hasRef())
+            if (deploymentTimeout[Symbol.toPrimitive]())
                 waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, deploymentTimeout);
         }
     });
 }
-exports.waitForDeploymentOutcome = waitForDeploymentOutcome;
+exports.default = waitForDeploymentOutcome;
 
 
 /***/ }),
@@ -453,13 +475,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const validateRequiredInputs_1 = __nccwpck_require__(119);
-const validateClusterExists_1 = __nccwpck_require__(812);
-const validateDeploymentForTaskDefinitionExists_1 = __nccwpck_require__(234);
-const validateServiceExists_1 = __nccwpck_require__(390);
-const waitForDeploymentOutcome_1 = __nccwpck_require__(998);
+const validateClusterExists_1 = __importDefault(__nccwpck_require__(812));
+const validateDeploymentForTaskDefinitionExists_1 = __importDefault(__nccwpck_require__(234));
+const validateServiceExists_1 = __importDefault(__nccwpck_require__(390));
+const waitForDeploymentOutcome_1 = __importDefault(__nccwpck_require__(998));
 function setDeploymentTimeout(deploymentTimeoutInMinutes) {
     return setTimeout(() => {
         throw new Error(`The rolling update did not complete before the timeout of ${deploymentTimeoutInMinutes} minutes.`);
@@ -468,23 +493,19 @@ function setDeploymentTimeout(deploymentTimeoutInMinutes) {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            validateRequiredInputs_1.validateRequiredInputs([
-                "cluster",
-                "service",
-                "task-definition-arn",
-                "deployment-timeout-minutes"
-            ]);
+            validateRequiredInputs_1.validateRequiredInputs(["cluster", "service", "task-definition-arn", "deployment-timeout-minutes"]);
             const clusterName = core.getInput("cluster");
             const serviceName = core.getInput("service");
             const taskDefinitionArn = core.getInput("task-definition-arn");
             const deploymentTimeoutInMinutes = Number(core.getInput("deployment-timeout-minutes"));
             const timeout = setDeploymentTimeout(deploymentTimeoutInMinutes);
-            yield validateClusterExists_1.validateClusterExists(clusterName);
-            yield validateServiceExists_1.validateServiceExists(clusterName, serviceName);
-            yield validateDeploymentForTaskDefinitionExists_1.validateDeploymentForTaskDefinitionExists(clusterName, serviceName, taskDefinitionArn);
-            const deploymentOutcome = waitForDeploymentOutcome_1.waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, timeout);
+            timeout.unref(); // unref() ensures that the process will exit even if the timeout is left behind
+            yield validateClusterExists_1.default(clusterName);
+            yield validateServiceExists_1.default(clusterName, serviceName);
+            yield validateDeploymentForTaskDefinitionExists_1.default(clusterName, serviceName, taskDefinitionArn);
+            const deploymentOutcome = waitForDeploymentOutcome_1.default(clusterName, serviceName, taskDefinitionArn, timeout);
             core.info(`Deployment outcome: ${deploymentOutcome}`);
-            core.setOutput("deploymentOutcome", deploymentOutcome);
+            core.setOutput("deployment-outcome", deploymentOutcome);
             clearTimeout(timeout);
         }
         catch (error) {

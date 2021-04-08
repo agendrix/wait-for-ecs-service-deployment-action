@@ -1,8 +1,8 @@
 
-import { fetchDeployments } from "./fetchDeployments";
+import fetchDeployments from "./fetchDeployments";
 import { DeploymentStatus } from "../types";
 
-export async function fetchPrimaryDeployment(clusterName: string, serviceName: string) {
+export default async function fetchPrimaryDeployment(clusterName: string, serviceName: string) {
   const deployments = await fetchDeployments(clusterName, serviceName);
   const primaryDeployment = deployments.find(d => d.status === DeploymentStatus.PRIMARY);
   if (!primaryDeployment) {
