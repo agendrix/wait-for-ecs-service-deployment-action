@@ -1,19 +1,17 @@
 
 import { exec } from "../../helpers/action/exec";
-import { Service } from "../types";
+import { Deployment, Service } from "../types";
 
 export default async function fetchDeployments(clusterName: string, serviceName: string) {
-  const result = JSON.parse(
+  const deployments: Deployment[] | null = JSON.parse(
     await exec(`
       aws ecs describe-services \
         --cluster ${clusterName} \
         --service ${serviceName} \
-        --query "services[*].deployments[*].{ id: id, status: status, taskDefinitionArn: taskDefinition, rolloutState: rolloutState }"
+        --query "services[0].deployments[*].{ id: id, status: status, taskDefinitionArn: taskDefinition, rolloutState: rolloutState }"
     `)
   );
-  const services: Array<Service> = result.services;
-  const service = services.find(s => s.serviceName === serviceName);
-  const deployments = service?.deployments;
+
   if (!deployments) throw new Error(`No service deployments were found. Please make sure that the aws-cli api has not changed.`);
 
   return deployments;

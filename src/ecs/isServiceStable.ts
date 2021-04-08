@@ -5,15 +5,16 @@ import { Service } from "../types";
 
 export default async function isServiceStable(clusterName: string, serviceName: string) {
   core.info(`Validating that an ECS cluster with name ${clusterName} exists...`);
-  const result = JSON.parse(
+  const service: Service | null = JSON.parse(
     await exec(`
       aws ecs describe-services \
         --cluster ${clusterName} \
         --service ${serviceName} \
-        --query "services[*].[{ desiredCount: desiredCount, runningCount: runningCount, deployments: deployments[*].id }]"
+        --query "services[0].{ desiredCount: desiredCount, runningCount: runningCount, deployments: deployments[*].id }"
     `)
   );
-  const service: Service = result.services.shift();
+
+  if (!service) throw new Error(`No service ${serviceName} was found in cluster ${clusterName}`);
 
   core.info(`
     Service desired count: ${service.desiredCount} 
