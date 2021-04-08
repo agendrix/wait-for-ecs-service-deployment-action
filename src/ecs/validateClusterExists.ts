@@ -8,7 +8,7 @@ export default async function validateClusterExists(clusterName: string) {
     await exec(`
       aws ecs describe-clusters \
         --clusters ${clusterName} \
-        --query 'clusters[*].clusterName'
+        --query "clusters[*].clusterName"
     `)
   );
   if (result.clusters.length === 0) {

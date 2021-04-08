@@ -10,7 +10,7 @@ export default async function isServiceStable(clusterName: string, serviceName: 
       aws ecs describe-services \
         --cluster ${clusterName} \
         --service ${serviceName} \
-        --query 'services[*].[{ desiredCount: desiredCount, runningCount: runningCount, deployments: deployments[*].id }]'
+        --query "services[*].[{ desiredCount: desiredCount, runningCount: runningCount, deployments: deployments[*].id }]"
     `)
   );
   const service: Service = result.services.shift();

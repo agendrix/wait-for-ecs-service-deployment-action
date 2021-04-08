@@ -8,7 +8,7 @@ import { exec as coreExec } from "@actions/exec";
  */
 export const exec = async (commandLine: string) => {
   let stdoutData = "";
-  await coreExec(commandLine, undefined, {
+  await coreExec(commandLine.trim(), undefined, {
     listeners: {
       stdout: (data: Buffer) => {
         stdoutData += data.toString();

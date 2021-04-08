@@ -9,7 +9,7 @@ export default async function validateServiceExists(clusterName: string, service
       aws ecs describe-services \
         --cluster ${clusterName} \
         --service ${serviceName} \
-        --query 'services[*].serviceName'
+        --query "services[*].serviceName"
     `)
   );
   if (result.services.length === 0) {
