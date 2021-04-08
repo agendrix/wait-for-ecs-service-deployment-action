@@ -268,12 +268,12 @@ const exec_1 = __nccwpck_require__(671);
 function validateClusterExists(clusterName) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Validating that an ECS cluster with name ${clusterName} exists...`);
-        const result = JSON.parse(yield exec_1.exec(`
+        const cluster = JSON.parse(yield exec_1.exec(`
       aws ecs describe-clusters \
         --clusters ${clusterName} \
-        --query "clusters[*].clusterName"
+        --query "clusters[0].clusterName"
     `));
-        if (result.clusters.length === 0) {
+        if (!cluster) {
             throw new Error(`No ECS clusters with name ${clusterName} was found.`);
         }
     });
