@@ -99,7 +99,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const exec_1 = __nccwpck_require__(671);
 function fetchDeployments(clusterName, serviceName) {
     return __awaiter(this, void 0, void 0, function* () {
-        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-services --cluster ${clusterName} --service ${serviceName} --query 'services[*].deployments[*].{ id: id, status: status, taskDefinitionArn: taskDefinitionArn, rolloutState: rolloutState }'`));
+        const result = JSON.parse(yield exec_1.exec(`
+      aws ecs describe-services \
+        --cluster ${clusterName} \
+        --service ${serviceName} \
+        --query 'services[*].deployments[*].{ id: id, status: status, taskDefinitionArn: taskDefinition, rolloutState: rolloutState }'
+    `));
         const services = result.services;
         const service = services.find(s => s.serviceName === serviceName);
         const deployments = service === null || service === void 0 ? void 0 : service.deployments;
@@ -185,7 +190,12 @@ const exec_1 = __nccwpck_require__(671);
 function isServiceStable(clusterName, serviceName) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Validating that an ECS cluster with name ${clusterName} exists...`);
-        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-services --cluster ${clusterName} --service ${serviceName} --query 'services[*].[{ desiredCount: desiredCount, runningCount: runningCount, deployments: deployments[*].id }]'`));
+        const result = JSON.parse(yield exec_1.exec(`
+      aws ecs describe-services \
+        --cluster ${clusterName} \
+        --service ${serviceName} \
+        --query 'services[*].[{ desiredCount: desiredCount, runningCount: runningCount, deployments: deployments[*].id }]'
+    `));
         const service = result.services.shift();
         core.info(`
     Service desired count: ${service.desiredCount} 
@@ -258,7 +268,11 @@ const exec_1 = __nccwpck_require__(671);
 function validateClusterExists(clusterName) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Validating that an ECS cluster with name ${clusterName} exists...`);
-        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-clusters --clusters ${clusterName} --query 'clusters[*].clusterName'`));
+        const result = JSON.parse(yield exec_1.exec(`
+      aws ecs describe-clusters \
+        --clusters ${clusterName} \
+        --query 'clusters[*].clusterName'
+    `));
         if (result.clusters.length === 0) {
             throw new Error(`No ECS clusters with name ${clusterName} was found.`);
         }
@@ -360,7 +374,12 @@ const exec_1 = __nccwpck_require__(671);
 function validateServiceExists(clusterName, serviceName) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Validating that an ECS service with name ${serviceName} exists in ${clusterName} cluster...`);
-        const result = JSON.parse(yield exec_1.exec(`aws ecs describe-services --cluster ${clusterName} --service ${serviceName} --query 'services[*].serviceName'`));
+        const result = JSON.parse(yield exec_1.exec(`
+      aws ecs describe-services \
+        --cluster ${clusterName} \
+        --service ${serviceName} \
+        --query 'services[*].serviceName'
+    `));
         if (result.services.length === 0) {
             throw new Error(`No ECS service with name ${serviceName} was found in ${clusterName} cluster.`);
         }
