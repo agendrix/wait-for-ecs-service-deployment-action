@@ -25,7 +25,7 @@ const exec_1 = __nccwpck_require__(514);
  * This action fails if data is outputted to stderr
  * @param commandLine The command to run
  */
-const exec = (commandLine) => __awaiter(void 0, void 0, void 0, function* () {
+const exec = (commandLine, failOnStdErr = true, silent = true) => __awaiter(void 0, void 0, void 0, function* () {
     let stdoutData = "";
     yield exec_1.exec(commandLine.trim(), undefined, {
         listeners: {
@@ -33,7 +33,8 @@ const exec = (commandLine) => __awaiter(void 0, void 0, void 0, function* () {
                 stdoutData += data.toString();
             },
         },
-        failOnStdErr: true
+        failOnStdErr,
+        silent
     });
     return stdoutData;
 });
