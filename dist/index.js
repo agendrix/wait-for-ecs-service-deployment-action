@@ -186,7 +186,7 @@ const core = __importStar(__nccwpck_require__(186));
 const exec_1 = __nccwpck_require__(671);
 function isServiceStable(clusterName, serviceName) {
     return __awaiter(this, void 0, void 0, function* () {
-        core.info(`Validating that an ECS cluster with name ${clusterName} exists...`);
+        core.info(`Validating that the service ${serviceName} is stable...`);
         const service = JSON.parse(yield exec_1.exec(`
       aws ecs describe-services \
         --cluster ${clusterName} \
