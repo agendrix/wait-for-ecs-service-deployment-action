@@ -10,7 +10,7 @@ jest.mock("../src/ecs/isServiceStable");
 const mockedIsServiceStable = isServiceStable as jest.Mock;
 mockedIsServiceStable.mockReturnValue(true);
 
-const TASK_DEFINITION_ARN = "arn:aws:ecs:ca-central-1:<account-number>:task-definition/web_app:1500";
+const TASK_DEFINITION_ARN = "arn:aws:ecs:region:<account-number>:task-definition/family:123";
 const CLUSTER = "cluster";
 const SERVICE = "service";
 

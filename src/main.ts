@@ -13,7 +13,7 @@ function setDeploymentTimeout(deploymentTimeoutInMinutes: number) {
 
 async function run(): Promise<void> {
   try {
-    validateRequiredInputs(["cluster", "service", "task-definition-arn", "deployment-timeout-minutes"]);
+    validateRequiredInputs(["cluster", "service", "task-definition-arn"]);
 
     const clusterName: string = core.getInput("cluster");
     const serviceName: string = core.getInput("service");

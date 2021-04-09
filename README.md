@@ -5,7 +5,7 @@ This action only supports [ECS rolling updates](https://docs.aws.amazon.com/Amaz
 
 ## Requirements
 
-This actions requires that the `aws-cli` is already configured. The official AWS action could be useful that achieve this configuration. [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) 
+This actions requires that the `aws-cli` is already configured. The official AWS action could be useful that achieve this configuration. Please refer to: [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) for further details.
 
 See [action.yml](./action.yml) for the list of `inputs` and `outputs`.
 
@@ -43,5 +43,5 @@ deploy-ecs-service-task-definition:
           cluster: ${{ env.CLUSTER_NAME }}
           service: ${{ env.SERVICE_NAME }}
           task-definition-arn: steps.deploy-task-definition.outputs.task-definition-arn
-          wait-for-minutes: ${{ env.SERVICE_DEPLOYMENT_TIMEOUT }}
+          deployment-timeout-minutes: ${{ env.SERVICE_DEPLOYMENT_TIMEOUT }}
 ```

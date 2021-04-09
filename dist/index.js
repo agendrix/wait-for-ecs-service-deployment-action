@@ -210,25 +210,6 @@ exports.default = isServiceStable;
 
 /***/ }),
 
-/***/ 795:
-/***/ ((__unused_webpack_module, exports) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-function parseTaskDefinitionArn(taskDefinitionArn) {
-    const familyAndRevision = taskDefinitionArn.split("/").pop();
-    if (familyAndRevision) {
-        let [_family, _revision, rest] = familyAndRevision.split(":");
-        if (!rest)
-            return familyAndRevision;
-    }
-    throw new Error(`Task definition arn ${taskDefinitionArn} format was not recognized.`);
-}
-exports.default = parseTaskDefinitionArn;
-
-
-/***/ }),
-
 /***/ 812:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -320,12 +301,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const fetchDeployments_1 = __importDefault(__nccwpck_require__(424));
-const parseTaskDefinition_1 = __importDefault(__nccwpck_require__(795));
 function validateDeploymentForTaskDefinitionExists(clusterName, serviceName, taskDefinitionArn) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`Validating that a deployment exists for task definition ${taskDefinitionArn}...`);
         const deployments = yield fetchDeployments_1.default(clusterName, serviceName);
-        if (!deployments.find(d => parseTaskDefinition_1.default(d.taskDefinitionArn) === parseTaskDefinition_1.default(taskDefinitionArn))) {
+        if (!deployments.find(d => d.taskDefinitionArn === taskDefinitionArn)) {
             throw new Error(`No deployment associated to task definition arn ${taskDefinitionArn} was found.`);
         }
     });
@@ -511,7 +491,7 @@ function setDeploymentTimeout(deploymentTimeoutInMinutes) {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            validateRequiredInputs_1.validateRequiredInputs(["cluster", "service", "task-definition-arn", "deployment-timeout-minutes"]);
+            validateRequiredInputs_1.validateRequiredInputs(["cluster", "service", "task-definition-arn"]);
             const clusterName = core.getInput("cluster");
             const serviceName = core.getInput("service");
             const taskDefinitionArn = core.getInput("task-definition-arn");
