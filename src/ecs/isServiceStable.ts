@@ -17,9 +17,9 @@ export default async function isServiceStable(clusterName: string, serviceName: 
   if (!service) throw new Error(`No service ${serviceName} was found in cluster ${clusterName}`);
 
   core.info(`
-    Service desired count: ${service.desiredCount} 
-    Service running count: ${service.runningCount}
-    Service ongoing deployments count: ${service.deployments.length}
+  Service desired count: ${service.desiredCount} 
+  Service running count: ${service.runningCount}
+  Service ongoing deployments count: ${service.deployments.length}
   `);
 
   return (
