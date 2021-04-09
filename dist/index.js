@@ -521,7 +521,7 @@ function run() {
             yield validateClusterExists_1.default(clusterName);
             yield validateServiceExists_1.default(clusterName, serviceName);
             yield validateDeploymentForTaskDefinitionExists_1.default(clusterName, serviceName, taskDefinitionArn);
-            const deploymentOutcome = waitForDeploymentOutcome_1.default(clusterName, serviceName, taskDefinitionArn, timeout);
+            const deploymentOutcome = yield waitForDeploymentOutcome_1.default(clusterName, serviceName, taskDefinitionArn, timeout);
             core.info(`Deployment outcome: ${deploymentOutcome}`);
             core.setOutput("deployment-outcome", deploymentOutcome);
             clearTimeout(timeout);

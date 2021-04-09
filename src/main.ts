@@ -26,7 +26,7 @@ async function run(): Promise<void> {
     await validateServiceExists(clusterName, serviceName);
     await validateDeploymentForTaskDefinitionExists(clusterName, serviceName, taskDefinitionArn);
 
-    const deploymentOutcome = waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, timeout);
+    const deploymentOutcome = await waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, timeout);
     core.info(`Deployment outcome: ${deploymentOutcome}`);
     core.setOutput("deployment-outcome", deploymentOutcome);
     clearTimeout(timeout);
