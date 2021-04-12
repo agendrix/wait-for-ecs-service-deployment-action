@@ -11,7 +11,13 @@ export default async function waitForDeploymentOutcome(clusterName: string, serv
   core.info("Waiting for deployment outcome...");
   let primaryDeployment = await fetchPrimaryDeployment(clusterName, serviceName);
   while (primaryDeployment.taskDefinitionArn === taskDefinitionArn && primaryDeployment.rolloutState !== RolloutState.COMPLETED) {
-    primaryDeployment = await fetchPrimaryDeployment(clusterName, serviceName);
+    const currentPrimaryDeployment = await fetchPrimaryDeployment(clusterName, serviceName);
+    if (currentPrimaryDeployment.taskDefinitionArn === primaryDeployment.taskDefinitionArn && currentPrimaryDeployment.id !== primaryDeployment.id) {
+      core.info("A rolling update for the same task definition was triggered (force-new-deployment), timeout will be restarted...");
+      deploymentTimeout.refresh();
+    }
+
+    primaryDeployment = currentPrimaryDeployment;
     await sleep(statusCheckFrequencyInMs);
   }
 

@@ -20,6 +20,7 @@ interface Deployment {
   status: string;
   taskDefinitionArn: string;
   rolloutState: string;
+  createdAt: string;
 }
 
 interface Service {

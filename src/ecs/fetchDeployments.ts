@@ -8,7 +8,7 @@ export default async function fetchDeployments(clusterName: string, serviceName:
       aws ecs describe-services \
         --cluster ${clusterName} \
         --service ${serviceName} \
-        --query "services[0].deployments[*].{ id: id, status: status, taskDefinitionArn: taskDefinition, rolloutState: rolloutState }"
+        --query "services[0].deployments[*].{ id: id, status: status, taskDefinitionArn: taskDefinition, rolloutState: rolloutState, createdAt: createdAt }"
     `)
   );
 

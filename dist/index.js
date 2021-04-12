@@ -104,7 +104,7 @@ function fetchDeployments(clusterName, serviceName) {
       aws ecs describe-services \
         --cluster ${clusterName} \
         --service ${serviceName} \
-        --query "services[0].deployments[*].{ id: id, status: status, taskDefinitionArn: taskDefinition, rolloutState: rolloutState }"
+        --query "services[0].deployments[*].{ id: id, status: status, taskDefinitionArn: taskDefinition, rolloutState: rolloutState, createdAt: createdAt }"
     `));
         if (!deployments)
             throw new Error(`No service deployments were found. Please make sure that the aws-cli api has not changed.`);
@@ -447,7 +447,12 @@ function waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, d
         core.info("Waiting for deployment outcome...");
         let primaryDeployment = yield fetchPrimaryDeployment_1.default(clusterName, serviceName);
         while (primaryDeployment.taskDefinitionArn === taskDefinitionArn && primaryDeployment.rolloutState !== types_1.RolloutState.COMPLETED) {
-            primaryDeployment = yield fetchPrimaryDeployment_1.default(clusterName, serviceName);
+            const currentPrimaryDeployment = yield fetchPrimaryDeployment_1.default(clusterName, serviceName);
+            if (currentPrimaryDeployment.taskDefinitionArn === primaryDeployment.taskDefinitionArn && currentPrimaryDeployment.id !== primaryDeployment.id) {
+                core.info("A rolling update for the same task definition was triggered (force-new-deployment), timeout will be restarted...");
+                deploymentTimeout.refresh();
+            }
+            primaryDeployment = currentPrimaryDeployment;
             yield sleep(statusCheckFrequencyInMs);
         }
         if (primaryDeployment.taskDefinitionArn !== taskDefinitionArn) {
