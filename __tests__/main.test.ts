@@ -1,4 +1,4 @@
-import { DeploymentOutcome, DeploymentStatus, RolloutState } from "../src/types";
+import { DeploymentOutcome, DeploymentStatus, RolloutState } from "../src/ecs/types";
 import fetchDeployments from "../src/ecs/fetchDeployments";
 import waitForDeploymentOutcome from "../src/ecs/waitForDeploymentOutcome";
 import isServiceStable from "../src/ecs/isServiceStable";

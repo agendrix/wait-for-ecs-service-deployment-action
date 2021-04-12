@@ -134,7 +134,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fetchDeployments_1 = __importDefault(__nccwpck_require__(424));
-const types_1 = __nccwpck_require__(945);
+const types_1 = __nccwpck_require__(599);
 function fetchPrimaryDeployment(clusterName, serviceName) {
     return __awaiter(this, void 0, void 0, function* () {
         const deployments = yield fetchDeployments_1.default(clusterName, serviceName);
@@ -206,6 +206,36 @@ function isServiceStable(clusterName, serviceName) {
     });
 }
 exports.default = isServiceStable;
+
+
+/***/ }),
+
+/***/ 599:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DeploymentOutcome = exports.RolloutState = exports.DeploymentStatus = void 0;
+var DeploymentStatus;
+(function (DeploymentStatus) {
+    DeploymentStatus["PRIMARY"] = "PRIMARY";
+    DeploymentStatus["ACTIVE"] = "ACTIVE";
+    DeploymentStatus["INACTIVE"] = "INACTIVE"; // A deployment that has been completely replaced
+})(DeploymentStatus || (DeploymentStatus = {}));
+exports.DeploymentStatus = DeploymentStatus;
+var RolloutState;
+(function (RolloutState) {
+    RolloutState["IN_PROGRESS"] = "IN_PROGRESS";
+    RolloutState["COMPLETED"] = "COMPLETED";
+    RolloutState["FAILED"] = "FAILED"; // Service fails to reach a steady state and circuit breaker is enabled
+})(RolloutState || (RolloutState = {}));
+exports.RolloutState = RolloutState;
+var DeploymentOutcome;
+(function (DeploymentOutcome) {
+    DeploymentOutcome["SUCCESS"] = "success";
+    DeploymentOutcome["SKIPPED"] = "skipped";
+})(DeploymentOutcome || (DeploymentOutcome = {}));
+exports.DeploymentOutcome = DeploymentOutcome;
 
 
 /***/ }),
@@ -407,7 +437,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const util_1 = __nccwpck_require__(669);
-const types_1 = __nccwpck_require__(945);
+const types_1 = __nccwpck_require__(599);
 const isServiceStable_1 = __importDefault(__nccwpck_require__(211));
 const fetchPrimaryDeployment_1 = __importDefault(__nccwpck_require__(490));
 const sleep = util_1.promisify(setTimeout);
@@ -512,36 +542,6 @@ function run() {
     });
 }
 run();
-
-
-/***/ }),
-
-/***/ 945:
-/***/ ((__unused_webpack_module, exports) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DeploymentOutcome = exports.RolloutState = exports.DeploymentStatus = void 0;
-var DeploymentStatus;
-(function (DeploymentStatus) {
-    DeploymentStatus["PRIMARY"] = "PRIMARY";
-    DeploymentStatus["ACTIVE"] = "ACTIVE";
-    DeploymentStatus["INACTIVE"] = "INACTIVE"; // A deployment that has been completely replaced
-})(DeploymentStatus || (DeploymentStatus = {}));
-exports.DeploymentStatus = DeploymentStatus;
-var RolloutState;
-(function (RolloutState) {
-    RolloutState["IN_PROGRESS"] = "IN_PROGRESS";
-    RolloutState["COMPLETED"] = "COMPLETED";
-    RolloutState["FAILED"] = "FAILED"; // Service fails to reach a steady state and circuit breaker is enabled
-})(RolloutState || (RolloutState = {}));
-exports.RolloutState = RolloutState;
-var DeploymentOutcome;
-(function (DeploymentOutcome) {
-    DeploymentOutcome["SUCCESS"] = "success";
-    DeploymentOutcome["SKIPPED"] = "skipped";
-})(DeploymentOutcome || (DeploymentOutcome = {}));
-exports.DeploymentOutcome = DeploymentOutcome;
 
 
 /***/ }),

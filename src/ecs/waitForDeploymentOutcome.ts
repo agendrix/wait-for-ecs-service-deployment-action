@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import { promisify } from "util";
-import { RolloutState, DeploymentOutcome } from "../types";
+import { RolloutState, DeploymentOutcome } from "./types";
 import isServiceStable from "./isServiceStable";
 import fetchPrimaryDeployment from "./fetchPrimaryDeployment";
 

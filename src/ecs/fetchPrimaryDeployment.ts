@@ -1,6 +1,6 @@
 
 import fetchDeployments from "./fetchDeployments";
-import { DeploymentStatus, Deployment } from "../types";
+import { DeploymentStatus, Deployment } from "./types";
 
 export default async function fetchPrimaryDeployment(clusterName: string, serviceName: string) {
   const deployments: Deployment[] = await fetchDeployments(clusterName, serviceName);

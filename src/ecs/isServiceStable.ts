@@ -1,7 +1,7 @@
 
 import * as core from "@actions/core";
 import { exec } from "../../helpers/action/exec";
-import { Service } from "../types";
+import { Service } from "./types";
 
 export default async function isServiceStable(clusterName: string, serviceName: string) {
   core.info(`Validating that the service ${serviceName} is stable...`);

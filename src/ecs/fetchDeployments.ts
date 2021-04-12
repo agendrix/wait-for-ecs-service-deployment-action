@@ -1,6 +1,6 @@
 
 import { exec } from "../../helpers/action/exec";
-import { Deployment, Service } from "../types";
+import { Deployment } from "./types";
 
 export default async function fetchDeployments(clusterName: string, serviceName: string) {
   const deployments: Deployment[] | null = JSON.parse(
