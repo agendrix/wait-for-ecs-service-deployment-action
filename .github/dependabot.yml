@@ -7,3 +7,7 @@ updates:
     # Check the npm registry for updates every day (weekdays)
     schedule:
       interval: 'daily'
+    # Only allow security updates
+    allowed_updates:
+      - match:
+        update_type: "security"
