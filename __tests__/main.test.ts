@@ -74,6 +74,37 @@ describe("waitForDeploymentOutcome", () => {
     ).toBe(DeploymentOutcome.SUCCESS);
   });
 
+  test("It must restart timeout if a new deployment with same task definition is registered (force new deployment)", async () => {
+    const deploymentA = {
+      id: "1",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN,
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const initialDeploymentsState = [{ ...deploymentA }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(initialDeploymentsState);
+
+    deploymentA.status = DeploymentStatus.ACTIVE;
+    const deploymentB = {
+      id: "2",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN,
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const middleDeploymentState = [{ ...deploymentA }, { ...deploymentB }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(middleDeploymentState);
+
+    deploymentB.rolloutState = RolloutState.COMPLETED;
+    const finalDeploymentsState = [{ ...deploymentA }, { ...deploymentB }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(finalDeploymentsState);
+
+    const timeout = setTimeout(() => {}, 1000);
+    timeout.refresh = jest.fn();
+    await waitForDeploymentOutcome(CLUSTER, SERVICE, TASK_DEFINITION_ARN, timeout, 1);
+
+    expect(timeout.refresh).toHaveBeenCalled();
+  });
+
   test("It must return 'skipped' if another deployment is enqueued", async () => {
     const deploymentA = {
       id: "1",
