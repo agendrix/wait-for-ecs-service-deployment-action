@@ -1,16 +1,35 @@
 import * as core from "@actions/core";
-import { wait } from "./wait";
+import { validateRequiredInputs } from "../helpers/action/validateRequiredInputs";
+import validateClusterExists from "./ecs/validateClusterExists";
+import validateDeploymentForTaskDefinitionExists from "./ecs/validateDeploymentForTaskDefinitionExists";
+import validateServiceExists from "./ecs/validateServiceExists";
+import waitForDeploymentOutcome from "./ecs/waitForDeploymentOutcome";
+
+function setDeploymentTimeout(deploymentTimeoutInMinutes: number) {
+  return setTimeout(() => {
+    throw new Error(`The rolling update did not complete before the timeout of ${deploymentTimeoutInMinutes} minutes.`);
+  }, deploymentTimeoutInMinutes * 60 * 1000);
+}
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput("milliseconds");
-    core.debug(`Waiting ${ms} milliseconds ...`); // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
+    validateRequiredInputs(["cluster", "service", "task-definition-arn"]);
 
-    core.debug(new Date().toTimeString());
-    await wait(parseInt(ms, 10));
-    core.debug(new Date().toTimeString());
+    const clusterName: string = core.getInput("cluster");
+    const serviceName: string = core.getInput("service");
+    const taskDefinitionArn: string = core.getInput("task-definition-arn");
+    const deploymentTimeoutInMinutes: number = Number(core.getInput("deployment-timeout-minutes"));
+    const timeout = setDeploymentTimeout(deploymentTimeoutInMinutes);
+    timeout.unref(); // unref() ensures that the process will exit even if the timeout is left behind
 
-    core.setOutput("time", new Date().toTimeString());
+    await validateClusterExists(clusterName);
+    await validateServiceExists(clusterName, serviceName);
+    await validateDeploymentForTaskDefinitionExists(clusterName, serviceName, taskDefinitionArn);
+
+    const deploymentOutcome = await waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, timeout);
+    core.info(`Deployment outcome: ${deploymentOutcome}`);
+    core.setOutput("deployment-outcome", deploymentOutcome);
+    clearTimeout(timeout);
   } catch (error) {
     core.setFailed(error.message);
   }

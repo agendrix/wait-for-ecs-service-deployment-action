@@ -1,28 +1,160 @@
-import { wait } from "../src/wait";
-import * as process from "process";
-import * as cp from "child_process";
-import * as path from "path";
+import { DeploymentOutcome, DeploymentStatus, RolloutState } from "../src/ecs/types";
+import fetchDeployments from "../src/ecs/fetchDeployments";
+import waitForDeploymentOutcome from "../src/ecs/waitForDeploymentOutcome";
+import isServiceStable from "../src/ecs/isServiceStable";
 
-test("throws invalid number", async () => {
-  const input = parseInt("foo", 10);
-  await expect(wait(input)).rejects.toThrow("milliseconds not a number");
-});
+jest.mock("../src/ecs/fetchDeployments");
+let mockedFetchDeployments = fetchDeployments as jest.Mock;
 
-test("wait 500 ms", async () => {
-  const start = new Date();
-  await wait(500);
-  const end = new Date();
-  var delta = Math.abs(end.getTime() - start.getTime());
-  expect(delta).toBeGreaterThan(450);
-});
+jest.mock("../src/ecs/isServiceStable");
+const mockedIsServiceStable = isServiceStable as jest.Mock;
+mockedIsServiceStable.mockReturnValue(true);
 
-// shows how the runner will run a javascript action with env / stdout protocol
-test("test runs", () => {
-  process.env["INPUT_MILLISECONDS"] = "500";
-  const np = process.execPath;
-  const ip = path.join(__dirname, "..", "lib", "src", "main.js");
-  const options: cp.ExecFileSyncOptions = {
-    env: process.env
-  };
-  console.log(cp.execFileSync(np, [ip], options).toString());
+const TASK_DEFINITION_ARN = "arn:aws:ecs:region:<account-number>:task-definition/family:123";
+const CLUSTER = "cluster";
+const SERVICE = "service";
+
+describe("waitForDeploymentOutcome", () => {
+  afterEach(() => mockedFetchDeployments.mockRestore());
+
+  test("It must return 'success' if deployment completes and service is stable", async () => {
+    const deployment = {
+      id: "1",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN,
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const initialDeploymentsState = [deployment];
+    const finalDeploymentsState = [{ ...deployment, rolloutState: RolloutState.COMPLETED }];
+    mockedFetchDeployments.mockReturnValueOnce(initialDeploymentsState).mockReturnValueOnce(finalDeploymentsState);
+    expect(
+      await waitForDeploymentOutcome(
+        CLUSTER,
+        SERVICE,
+        TASK_DEFINITION_ARN,
+        setTimeout(() => {}),
+        1
+      )
+    ).toBe(DeploymentOutcome.SUCCESS);
+    mockedFetchDeployments.mockRestore();
+  });
+
+  test("It must handle two ongoing deployments with same task definition (force new deployment)", async () => {
+    const deploymentA = {
+      id: "1",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN,
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const initialDeploymentsState = [{ ...deploymentA }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(initialDeploymentsState);
+
+    deploymentA.status = DeploymentStatus.ACTIVE;
+    const deploymentB = {
+      id: "2",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN,
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const middleDeploymentState = [{ ...deploymentA }, { ...deploymentB }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(middleDeploymentState);
+
+    deploymentB.rolloutState = RolloutState.COMPLETED;
+    const finalDeploymentsState = [{ ...deploymentA }, { ...deploymentB }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(finalDeploymentsState);
+
+    expect(
+      await waitForDeploymentOutcome(
+        CLUSTER,
+        SERVICE,
+        TASK_DEFINITION_ARN,
+        setTimeout(() => {}),
+        1
+      )
+    ).toBe(DeploymentOutcome.SUCCESS);
+  });
+
+  test("It must restart timeout if a new deployment with same task definition is registered (force new deployment)", async () => {
+    const deploymentA = {
+      id: "1",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN,
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const initialDeploymentsState = [{ ...deploymentA }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(initialDeploymentsState);
+
+    deploymentA.status = DeploymentStatus.ACTIVE;
+    const deploymentB = {
+      id: "2",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN,
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const middleDeploymentState = [{ ...deploymentA }, { ...deploymentB }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(middleDeploymentState);
+
+    deploymentB.rolloutState = RolloutState.COMPLETED;
+    const finalDeploymentsState = [{ ...deploymentA }, { ...deploymentB }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(finalDeploymentsState);
+
+    const timeout = setTimeout(() => {}, 1000);
+    timeout.refresh = jest.fn();
+    await waitForDeploymentOutcome(CLUSTER, SERVICE, TASK_DEFINITION_ARN, timeout, 1);
+
+    expect(timeout.refresh).toHaveBeenCalled();
+  });
+
+  test("It must return 'skipped' if another deployment is enqueued", async () => {
+    const deploymentA = {
+      id: "1",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN,
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const initialDeploymentsState = [{ ...deploymentA }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(initialDeploymentsState);
+
+    deploymentA.status = DeploymentStatus.ACTIVE;
+    const deploymentB = {
+      id: "2",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN.slice(0, -1),
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const finalDeploymentsState = [{ ...deploymentA }, { ...deploymentB }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(finalDeploymentsState);
+
+    expect(
+      await waitForDeploymentOutcome(
+        CLUSTER,
+        SERVICE,
+        TASK_DEFINITION_ARN,
+        setTimeout(() => {}),
+        1
+      )
+    ).toBe(DeploymentOutcome.SKIPPED);
+  });
+
+  test("It must timeout service deployment never becomes stable", async () => {
+    const deployments = [
+      {
+        id: "1",
+        status: DeploymentStatus.PRIMARY,
+        taskDefinitionArn: TASK_DEFINITION_ARN,
+        rolloutState: RolloutState.IN_PROGRESS
+      }
+    ];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(deployments);
+    expect(async () => {
+      const deploymentTimeout = setTimeout(() => {
+        throw new Error("timeout");
+      }, 1000);
+      try {
+        await waitForDeploymentOutcome(CLUSTER, SERVICE, TASK_DEFINITION_ARN, deploymentTimeout);
+      } catch (e) {
+        expect(e).toMatch("timeout");
+      }
+    });
+  });
 });

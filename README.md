@@ -1,105 +1,47 @@
-# Create a JavaScript Action using TypeScript
+# Wait for an ECS service deployment to complete
 
-Use this template to bootstrap the creation of a TypeScript action.:rocket:
+Wait for an ECS service rolling update to complete and output the outcome. 
+This action only supports [ECS rolling updates](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-type-ecs.html).
 
-This template includes compilation support, tests, a validation workflow, publishing, and versioning guidance.  
+## Requirements
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+This actions requires that the `aws-cli` is already configured. The official AWS action could be useful that achieve this configuration. Please refer to: [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) for further details.
 
-## Create an action from this template
+See [action.yml](./action.yml) for the list of `inputs` and `outputs`.
 
-Click the `Use this Template` and provide the new repo details for your action
-
-## Code in Main
-
-> First, you'll need to have a reasonably modern version of `node` handy. This won't work with versions older than 9, for instance.
-
-Install the dependencies  
-```bash
-$ yarn install
-```
-
-Build the typescript and package it for distribution
-```bash
-$ yarn build && yarn package
-```
-
-Run the tests :heavy_check_mark:  
-```bash
-$ yarn test
-
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
-
-...
-```
-
-## Change action.yml
-
-The action.yml contains defines the inputs and output for your action.
-
-Update the action.yml with your name, description, inputs and outputs for your action.
-
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-import * as core from '@actions/core';
-...
-
-async function run() {
-  try { 
-      ...
-  } 
-  catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
-run()
-```
-
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Publish to a distribution branch
-
-Actions are run from GitHub repos so we will checkin the packed dist folder. 
-
-Then run [ncc](https://github.com/zeit/ncc) and push the results:
-```bash
-$ yarn package
-$ git add dist
-$ git commit -a -m "prod dependencies"
-$ git push origin releases/v1
-```
-
-Note: We recommend using the `--license` option for ncc, which will create a license file for all of the production node modules used in your project.
-
-Your action is now published! :rocket: 
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Validate
-
-You can now validate the action by referencing `./` in a workflow in your repo (see [test.yml](.github/workflows/test.yml))
+## Example usage
 
 ```yaml
-uses: ./
-with:
-  milliseconds: 1000
+deploy-ecs-service-task-definition:
+  name: Deploy <SERVICE> service
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Deploy service to Amazon ECS
+        id: deploy-task-definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          cluster: ${{ env.CLUSTER_NAME }}
+          service: ${{ env.SERVICE_NAME }}
+          task-definition: ${{ env.TASK_DEFINITION }}
+          wait-for-service-stability: false
+
+      - name: Wait for ${{ env.SERVICE_NAME }} service deployment to complete
+        id: wait-for-ecs-service-deployment
+        uses: agendrix/wait-for-ecs-service-deployment-action@<VERSION>
+        with:
+          cluster: ${{ env.CLUSTER_NAME }}
+          service: ${{ env.SERVICE_NAME }}
+          task-definition-arn: steps.deploy-task-definition.outputs.task-definition-arn
+          deployment-timeout-minutes: ${{ env.SERVICE_DEPLOYMENT_TIMEOUT }}
 ```
-
-See the [actions tab](https://github.com/actions/typescript-action/actions) for runs of this action! :rocket:
-
-## Usage:
-
-After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and latest V1 action
-
-## Helpers
-
-If you created helpers that you consider could benefit to other actions, please consider contributing by adding them to the `helpers` folder.

@@ -1,11 +1,25 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: Wait for ECS service deployment
+description: Wait for an ECS service deployment to complete
+author: Agendrix
 inputs:
-  milliseconds: # change this
+  cluster: 
+    description: Name of the ECS cluster in which the service operates
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  service: 
+    description: Name of the ECS service
+    required: true
+  task-definition-arn:
+    description: ARN of the task definition attached to the deployment to monitor
+    required: true
+  deployment-timeout-minutes:
+    description: How long to wait for the ECS service deployment to complete before failing
+    default: 10
+outputs:
+  deployment-outcome:
+    description: |
+      The outcome of the service deployment. Possible values are:
+      'success' if the deployment completed successfully and that the service is stable
+      'skipped' if a new primary deployment was enqueue while the deployment was ongoing
 runs:
-  using: 'node12'
-  main: 'dist/index.js'
+  using: node12
+  main: dist/index.js
