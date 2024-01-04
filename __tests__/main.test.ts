@@ -136,7 +136,7 @@ describe("waitForDeploymentOutcome", () => {
     ).toBe(DeploymentOutcome.SKIPPED);
   });
 
-  test("It must throw if a rollback enqueued", async () => {
+  test("It must return 'rollback' if a rollback enqueued", async () => {
     const deploymentA = {
       id: "1",
       status: DeploymentStatus.PRIMARY,
