@@ -119,7 +119,7 @@ describe("waitForDeploymentOutcome", () => {
     const deploymentB = {
       id: "2",
       status: DeploymentStatus.PRIMARY,
-      taskDefinitionArn: TASK_DEFINITION_ARN.slice(0, -1),
+      taskDefinitionArn: TASK_DEFINITION_ARN + "1",
       rolloutState: RolloutState.IN_PROGRESS
     };
     const finalDeploymentsState = [{ ...deploymentA }, { ...deploymentB }];
@@ -134,6 +134,37 @@ describe("waitForDeploymentOutcome", () => {
         1
       )
     ).toBe(DeploymentOutcome.SKIPPED);
+  });
+
+  test("It must return 'rollback' if a rollback enqueued", async () => {
+    const deploymentA = {
+      id: "1",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN,
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const initialDeploymentsState = [{ ...deploymentA }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(initialDeploymentsState);
+
+    deploymentA.status = DeploymentStatus.ACTIVE;
+    const deploymentB = {
+      id: "2",
+      status: DeploymentStatus.PRIMARY,
+      taskDefinitionArn: TASK_DEFINITION_ARN.slice(0, -1),
+      rolloutState: RolloutState.IN_PROGRESS
+    };
+    const finalDeploymentsState = [{ ...deploymentA }, { ...deploymentB }];
+    mockedFetchDeployments = mockedFetchDeployments.mockReturnValueOnce(finalDeploymentsState);
+
+    expect(
+      await waitForDeploymentOutcome(
+        CLUSTER,
+        SERVICE,
+        TASK_DEFINITION_ARN,
+        setTimeout(() => {}),
+        1
+      )
+    ).toBe(DeploymentOutcome.ROLLBACK);
   });
 
   test("It must timeout service deployment never becomes stable", async () => {

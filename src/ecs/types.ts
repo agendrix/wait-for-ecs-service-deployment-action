@@ -12,7 +12,8 @@ enum RolloutState {
 
 enum DeploymentOutcome {
   SUCCESS = "success",
-  SKIPPED = "skipped"
+  SKIPPED = "skipped",
+  ROLLBACK = "rollback"
 }
 
 interface Deployment {

@@ -21,10 +21,17 @@ export default async function waitForDeploymentOutcome(clusterName: string, serv
     await sleep(statusCheckFrequencyInMs);
   }
 
-  if (primaryDeployment.taskDefinitionArn !== taskDefinitionArn) {
+  const previousTaskDefinitionRevision = taskDefinitionArn.split(":").pop()!;
+  const newTaskDefinitionRevision = primaryDeployment.taskDefinitionArn.split(":").pop()!;
+
+  if (primaryDeployment.taskDefinitionArn !== taskDefinitionArn && newTaskDefinitionRevision > previousTaskDefinitionRevision) {
     core.info(`A new PRIMARY deployment is registered with task definition ${primaryDeployment.taskDefinitionArn}.`);
     return DeploymentOutcome.SKIPPED;
-  } else if (isServiceStable(clusterName, serviceName)) {
+  } else if (primaryDeployment.taskDefinitionArn !== taskDefinitionArn && newTaskDefinitionRevision < previousTaskDefinitionRevision) {
+    core.error(`A rollback has been triggered. Starting a new deployment with task definition ${primaryDeployment.taskDefinitionArn}.`);
+    return DeploymentOutcome.ROLLBACK;
+  }
+  else if (isServiceStable(clusterName, serviceName)) {
     core.info(`The deployment associated with ${taskDefinitionArn} has completed successfully and the service ${serviceName} is stable`);
     return DeploymentOutcome.SUCCESS;
   } else {
