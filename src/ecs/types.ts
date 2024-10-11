@@ -25,7 +25,7 @@ interface Deployment {
 
 interface Service {
   serviceName: string;
-  deployments: Array<Deployment>;
+  deployments: Deployment[];
   desiredCount: number;
   runningCount: number;
 }

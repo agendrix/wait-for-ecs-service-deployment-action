@@ -1,8 +1,7 @@
-
 import { exec } from "../../helpers/action/exec";
 import { Deployment } from "./types";
 
-export default async function fetchDeployments(clusterName: string, serviceName: string) {
+export default async function fetchDeployments(clusterName: string, serviceName: string): Promise<Deployment[]> {
   const deployments: Deployment[] | null = JSON.parse(
     await exec(`
       aws ecs describe-services \

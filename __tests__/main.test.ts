@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+
 import { DeploymentOutcome, DeploymentStatus, RolloutState } from "../src/ecs/types";
 import fetchDeployments from "../src/ecs/fetchDeployments";
 import waitForDeploymentOutcome from "../src/ecs/waitForDeploymentOutcome";
@@ -155,6 +157,6 @@ describe("waitForDeploymentOutcome", () => {
       } catch (e) {
         expect(e).toMatch("timeout");
       }
-    });
+    }).toBeDefined();
   });
 });

@@ -1,7 +1,6 @@
 # Wait for an ECS service deployment to complete
 
-Wait for an ECS service rolling update to complete and output the outcome. 
-This action only supports [ECS rolling updates](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-type-ecs.html).
+Wait for an ECS service rolling update to complete and output the outcome. This action only supports [ECS rolling updates](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-type-ecs.html).
 
 ## Requirements
 

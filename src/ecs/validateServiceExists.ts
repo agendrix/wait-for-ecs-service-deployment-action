@@ -1,8 +1,7 @@
-
 import * as core from "@actions/core";
 import { exec } from "../../helpers/action/exec";
 
-export default async function validateServiceExists(clusterName: string, serviceName: string) {
+export default async function validateServiceExists(clusterName: string, serviceName: string): Promise<void> {
   core.info(`Validating that an ECS service with name ${serviceName} exists in ${clusterName} cluster...`);
   const service = JSON.parse(
     await exec(`

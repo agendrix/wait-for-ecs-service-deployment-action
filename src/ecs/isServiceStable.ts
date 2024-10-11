@@ -1,9 +1,8 @@
-
 import * as core from "@actions/core";
 import { exec } from "../../helpers/action/exec";
 import { Service } from "./types";
 
-export default async function isServiceStable(clusterName: string, serviceName: string) {
+export default async function isServiceStable(clusterName: string, serviceName: string): Promise<boolean> {
   core.info(`Validating that the service ${serviceName} is stable...`);
   const service: Service | null = JSON.parse(
     await exec(`
@@ -22,8 +21,5 @@ export default async function isServiceStable(clusterName: string, serviceName: 
   Service ongoing deployments count: ${service.deployments.length}
   `);
 
-  return (
-    service.desiredCount === service.runningCount &&
-    service.deployments.length === 1
-  );
+  return service.desiredCount === service.runningCount && service.deployments.length === 1;
 }
