@@ -2,10 +2,10 @@ name: Wait for ECS service deployment
 description: Wait for an ECS service deployment to complete
 author: Agendrix
 inputs:
-  cluster: 
+  cluster:
     description: Name of the ECS cluster in which the service operates
     required: true
-  service: 
+  service:
     description: Name of the ECS service
     required: true
   task-definition-arn:
