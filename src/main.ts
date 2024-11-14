@@ -21,7 +21,7 @@ async function run(): Promise<void> {
     const clusterName: string = core.getInput("cluster");
     const serviceName: string = core.getInput("service");
     const taskDefinitionArn: string = core.getInput("task-definition-arn");
-    const deploymentTimeoutInMinutes = Number(core.getInput("deployment-timeout-minutes"));
+    const deploymentTimeoutInMinutes = Number(core.getInput("wait-for-minutes"));
     const timeout = setDeploymentTimeout(deploymentTimeoutInMinutes);
     timeout.unref(); // unref() ensures that the process will exit even if the timeout is left behind
 

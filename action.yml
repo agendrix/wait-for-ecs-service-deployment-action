@@ -11,7 +11,7 @@ inputs:
   task-definition-arn:
     description: ARN of the task definition attached to the deployment to monitor
     required: true
-  deployment-timeout-minutes:
+  wait-for-minutes:
     description: How long to wait for the ECS service deployment to complete before failing
     default: 10
 outputs:
@@ -21,5 +21,5 @@ outputs:
       'success' if the deployment completed successfully and that the service is stable
       'skipped' if a new primary deployment was enqueue while the deployment was ongoing
 runs:
-  using: node20
+  using: node22
   main: dist/index.js

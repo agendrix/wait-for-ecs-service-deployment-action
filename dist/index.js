@@ -26014,11 +26014,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports["default"] = waitForDeploymentOutcome;
 const core = __importStar(__nccwpck_require__(7484));
-const util_1 = __nccwpck_require__(9023);
-const types_1 = __nccwpck_require__(8132);
-const isServiceStable_1 = __importDefault(__nccwpck_require__(1385));
+const node_util_1 = __nccwpck_require__(7975);
 const fetchPrimaryDeployment_1 = __importDefault(__nccwpck_require__(5832));
-const sleep = (0, util_1.promisify)(setTimeout);
+const isServiceStable_1 = __importDefault(__nccwpck_require__(1385));
+const types_1 = __nccwpck_require__(8132);
+const sleep = (0, node_util_1.promisify)(setTimeout);
 const STATUS_CHECK_FREQUENCY_MS = 5000;
 async function waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, deploymentTimeout, statusCheckFrequencyInMs = STATUS_CHECK_FREQUENCY_MS) {
     core.info("Waiting for deployment outcome...");
@@ -26036,16 +26036,14 @@ async function waitForDeploymentOutcome(clusterName, serviceName, taskDefinition
         core.info(`A new PRIMARY deployment is registered with task definition ${primaryDeployment.taskDefinitionArn}.`);
         return types_1.DeploymentOutcome.SKIPPED;
     }
-    else if (await (0, isServiceStable_1.default)(clusterName, serviceName)) {
+    if (await (0, isServiceStable_1.default)(clusterName, serviceName)) {
         core.info(`The deployment associated with ${taskDefinitionArn} has completed successfully and the service ${serviceName} is stable`);
         return types_1.DeploymentOutcome.SUCCESS;
     }
-    else {
-        core.error(`The primary deployment has a rollout status of ${primaryDeployment.rolloutState} but the the service does not seem stable. The action will therefore continue waiting until the service becomes stable.`);
-        // Validate deployment timeout existence to prevent infinite loop
-        if (deploymentTimeout?.[Symbol.toPrimitive]())
-            return waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, deploymentTimeout);
-    }
+    core.error(`The primary deployment has a rollout status of ${primaryDeployment.rolloutState} but the the service does not seem stable. The action will therefore continue waiting until the service becomes stable.`);
+    // Validate deployment timeout existence to prevent infinite loop
+    if (deploymentTimeout?.[Symbol.toPrimitive]())
+        return waitForDeploymentOutcome(clusterName, serviceName, taskDefinitionArn, deploymentTimeout);
 }
 
 
@@ -26100,7 +26098,7 @@ async function run() {
         const clusterName = core.getInput("cluster");
         const serviceName = core.getInput("service");
         const taskDefinitionArn = core.getInput("task-definition-arn");
-        const deploymentTimeoutInMinutes = Number(core.getInput("deployment-timeout-minutes"));
+        const deploymentTimeoutInMinutes = Number(core.getInput("wait-for-minutes"));
         const timeout = setDeploymentTimeout(deploymentTimeoutInMinutes);
         timeout.unref(); // unref() ensures that the process will exit even if the timeout is left behind
         await (0, validateClusterExists_1.default)(clusterName);
